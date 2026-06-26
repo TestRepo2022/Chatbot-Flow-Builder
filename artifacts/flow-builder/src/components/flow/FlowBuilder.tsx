@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
+import { useLocation } from 'wouter';
 import ReactFlow, {
   Background,
   Controls,
@@ -33,7 +34,7 @@ import {
 } from './nodes/GenericNode';
 import {
   Save, Upload, Download, CheckCircle, Zap, Undo2, Redo2,
-  Moon, Sun, Edit2, Check, History
+  Moon, Sun, Edit2, Check, History, ChevronLeft
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -54,6 +55,7 @@ const nodeTypes = {
 };
 
 function FlowBuilderInner() {
+  const [, setLocation] = useLocation();
   const {
     nodes, edges, onNodesChange, onEdgesChange, onConnect,
     selectedNodeId, selectNode, deleteNode, deleteEdge,
@@ -229,8 +231,17 @@ function FlowBuilderInner() {
           borderBottom: '1px solid hsl(var(--border))',
         }}
       >
-        {/* Logo + Flow Name */}
+        {/* Back button + Logo + Flow Name */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
+          <button
+            onClick={() => { saveFlow(); setLocation('/'); }}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            title="Back to dashboard"
+            data-testid="button-back-to-dashboard"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="w-px h-4" style={{ background: 'hsl(var(--border))' }} />
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
             style={{ background: 'hsl(var(--primary))', color: 'white' }}

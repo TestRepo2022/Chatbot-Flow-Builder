@@ -13,15 +13,9 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import { NODE_TYPES_CONFIG } from '../lib/nodeConfig';
-import { updateFlow, publishFlow as apiPublishFlow } from '../lib/api';
+import { saveFlow as apiSaveFlow, getFlow, publishFlow as apiPublishFlow, FlowData } from '../lib/api';
 
-export interface FlowJSON {
-  id: string;
-  name: string;
-  status: 'draft' | 'published';
-  nodes: Node[];
-  edges: Edge[];
-}
+export type { FlowData as FlowJSON };
 
 export interface HistoryEntry {
   nodes: Node[];
@@ -41,27 +35,35 @@ export interface VersionSnapshot {
   trigger: 'auto' | 'manual' | 'publish';
 }
 
-const SNAPSHOTS_KEY = 'flow_flow_1_history';
 const MAX_SNAPSHOTS = 10;
 
-function loadSnapshots(): VersionSnapshot[] {
+function snapshotsKey(flowId: string) {
+  return `fb_flow_${flowId}_history`;
+}
+
+function loadSnapshots(flowId: string): VersionSnapshot[] {
   try {
-    const raw = localStorage.getItem(SNAPSHOTS_KEY);
+    const raw = localStorage.getItem(snapshotsKey(flowId));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-function persistSnapshots(snapshots: VersionSnapshot[]) {
-  localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+function persistSnapshots(flowId: string, snapshots: VersionSnapshot[]) {
+  localStorage.setItem(snapshotsKey(flowId), JSON.stringify(snapshots));
 }
+
+const EMPTY_NODES: Node[] = [];
+const EMPTY_EDGES: Edge[] = [];
 
 export interface FlowStore {
   flowId: string;
   flowName: string;
   flowStatus: 'draft' | 'published';
+  flowDescription: string;
   lastSaved: Date | null;
+  isLoaded: boolean;
 
   nodes: Node[];
   edges: Edge[];
@@ -97,115 +99,35 @@ export interface FlowStore {
   restoreSnapshot: (snapshotId: string) => void;
   deleteSnapshot: (snapshotId: string) => void;
 
+  loadFlow: (id: string) => void;
   setFlowName: (name: string) => void;
   publishFlow: () => void;
   saveAsDraft: () => void;
   saveFlow: () => void;
-  exportJSON: () => FlowJSON;
-  importJSON: (json: FlowJSON) => void;
+  exportJSON: () => FlowData;
+  importJSON: (json: FlowData) => void;
   validateFlow: () => { valid: boolean; errors: string[] };
 }
 
-const defaultInitialNodes: Node[] = [
-  {
-    id: 'start-1',
-    type: 'startNode',
-    position: { x: 350, y: 80 },
-    data: { label: 'Start' },
-  },
-  {
-    id: 'text-1',
-    type: 'textMessage',
-    position: { x: 350, y: 220 },
-    data: {
-      label: 'Welcome Message',
-      message: 'Hello! Welcome to our Travel Booking Bot. How can I help you today?',
-      variables: [],
-    },
-  },
-  {
-    id: 'qr-1',
-    type: 'quickReply',
-    position: { x: 350, y: 400 },
-    data: {
-      label: 'Main Menu',
-      message: 'Please select an option:',
-      buttons: [
-        { id: 'btn_1', text: 'Book a Flight' },
-        { id: 'btn_2', text: 'Book Hotel' },
-        { id: 'btn_3', text: 'View My Bookings' },
-      ],
-    },
-  },
-  {
-    id: 'end-1',
-    type: 'endNode',
-    position: { x: 100, y: 600 },
-    data: { label: 'End - Flight', message: 'Starting flight booking...' },
-  },
-  {
-    id: 'end-2',
-    type: 'endNode',
-    position: { x: 350, y: 600 },
-    data: { label: 'End - Hotel', message: 'Starting hotel booking...' },
-  },
-  {
-    id: 'end-3',
-    type: 'endNode',
-    position: { x: 600, y: 600 },
-    data: { label: 'End - Bookings', message: 'Loading your bookings...' },
-  },
-];
-
-const defaultInitialEdges: Edge[] = [
-  { id: 'e1', source: 'start-1', target: 'text-1', animated: true },
-  { id: 'e2', source: 'text-1', target: 'qr-1' },
-  { id: 'e3', source: 'qr-1', sourceHandle: 'btn_1', target: 'end-1' },
-  { id: 'e4', source: 'qr-1', sourceHandle: 'btn_2', target: 'end-2' },
-  { id: 'e5', source: 'qr-1', sourceHandle: 'btn_3', target: 'end-3' },
-];
-
-function loadSavedFlow(): { nodes: Node[]; edges: Edge[]; name: string; status: 'draft' | 'published' } {
-  try {
-    const saved = localStorage.getItem('flow_flow_1');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        nodes: parsed.nodes || defaultInitialNodes,
-        edges: parsed.edges || defaultInitialEdges,
-        name: parsed.name || 'Travel Booking Bot',
-        status: parsed.status || 'draft',
-      };
-    }
-  } catch (_e) {
-    // ignore
-  }
-  return {
-    nodes: defaultInitialNodes,
-    edges: defaultInitialEdges,
-    name: 'Travel Booking Bot',
-    status: 'draft',
-  };
-}
-
-const saved = loadSavedFlow();
-
 export const useFlowStore = create<FlowStore>((set, get) => ({
-  flowId: 'flow_1',
-  flowName: saved.name,
-  flowStatus: saved.status,
+  flowId: '',
+  flowName: '',
+  flowStatus: 'draft',
+  flowDescription: '',
   lastSaved: null,
+  isLoaded: false,
 
-  nodes: saved.nodes,
-  edges: saved.edges,
+  nodes: EMPTY_NODES,
+  edges: EMPTY_EDGES,
   selectedNodeId: null,
   copiedNode: null,
 
-  history: [{ nodes: saved.nodes, edges: saved.edges, timestamp: Date.now() }],
+  history: [],
   historyIndex: 0,
   canUndo: false,
   canRedo: false,
-  versionSnapshots: loadSnapshots(),
+
+  versionSnapshots: [],
 
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
@@ -338,12 +260,13 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   },
 
   saveSnapshot: (trigger = 'auto', label?: string) => {
-    const { nodes, edges, flowName, versionSnapshots } = get();
+    const { nodes, edges, flowName, versionSnapshots, flowId } = get();
+    if (!flowId) return;
     const now = Date.now();
     const triggerLabels: Record<string, string> = {
-      auto: `Auto-save`,
-      manual: `Manual save`,
-      publish: `Published`,
+      auto: 'Auto-save',
+      manual: 'Manual save',
+      publish: 'Published',
     };
     const newSnap: VersionSnapshot = {
       id: `snap_${now}`,
@@ -357,7 +280,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
       trigger,
     };
     const updated = [newSnap, ...versionSnapshots].slice(0, MAX_SNAPSHOTS);
-    persistSnapshots(updated);
+    persistSnapshots(flowId, updated);
     set({ versionSnapshots: updated });
   },
 
@@ -378,19 +301,53 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   },
 
   deleteSnapshot: (snapshotId) => {
-    const { versionSnapshots } = get();
+    const { versionSnapshots, flowId } = get();
     const updated = versionSnapshots.filter((s) => s.id !== snapshotId);
-    persistSnapshots(updated);
+    persistSnapshots(flowId, updated);
     set({ versionSnapshots: updated });
+  },
+
+  loadFlow: (id: string) => {
+    const flow = getFlow(id);
+    if (!flow) return;
+    const nodes = (flow.nodes || []) as Node[];
+    const edges = (flow.edges || []) as Edge[];
+    set({
+      flowId: flow.id,
+      flowName: flow.name,
+      flowStatus: flow.status || 'draft',
+      flowDescription: flow.description || '',
+      nodes,
+      edges,
+      selectedNodeId: null,
+      copiedNode: null,
+      history: [{ nodes, edges, timestamp: Date.now() }],
+      historyIndex: 0,
+      canUndo: false,
+      canRedo: false,
+      versionSnapshots: loadSnapshots(flow.id),
+      lastSaved: null,
+      isLoaded: true,
+    });
   },
 
   setFlowName: (name) => set({ flowName: name }),
 
   publishFlow: () => {
-    const { flowId, nodes, edges, flowName } = get();
+    const { flowId, nodes, edges, flowName, flowDescription } = get();
+    if (!flowId) return;
     apiPublishFlow(flowId);
     set({ flowStatus: 'published', lastSaved: new Date() });
-    localStorage.setItem(`flow_${flowId}`, JSON.stringify({ id: flowId, name: flowName, status: 'published', nodes, edges }));
+    apiSaveFlow({
+      id: flowId,
+      name: flowName,
+      status: 'published',
+      nodes,
+      edges,
+      description: flowDescription,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
     get().saveSnapshot('publish');
   },
 
@@ -400,16 +357,34 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   },
 
   saveFlow: () => {
-    const { flowId, flowName, flowStatus, nodes, edges } = get();
-    const data = { id: flowId, name: flowName, status: flowStatus, nodes, edges };
-    localStorage.setItem(`flow_${flowId}`, JSON.stringify(data));
-    updateFlow(flowId, data);
+    const { flowId, flowName, flowStatus, nodes, edges, flowDescription } = get();
+    if (!flowId) return;
+    const existing = getFlow(flowId);
+    apiSaveFlow({
+      id: flowId,
+      name: flowName,
+      status: flowStatus,
+      nodes,
+      edges,
+      description: flowDescription,
+      createdAt: existing?.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+    });
     set({ lastSaved: new Date() });
   },
 
   exportJSON: () => {
-    const { flowId, flowName, flowStatus, nodes, edges } = get();
-    return { id: flowId, name: flowName, status: flowStatus, nodes, edges };
+    const { flowId, flowName, flowStatus, nodes, edges, flowDescription } = get();
+    return {
+      id: flowId,
+      name: flowName,
+      status: flowStatus,
+      nodes,
+      edges,
+      description: flowDescription,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
   },
 
   importJSON: (json) => {
@@ -417,6 +392,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
       flowId: json.id || `flow_${Date.now()}`,
       flowName: json.name || 'Imported Flow',
       flowStatus: json.status || 'draft',
+      flowDescription: json.description || '',
       nodes: json.nodes || [],
       edges: json.edges || [],
       history: [{ nodes: json.nodes || [], edges: json.edges || [], timestamp: Date.now() }],
@@ -424,6 +400,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
       selectedNodeId: null,
       canUndo: false,
       canRedo: false,
+      isLoaded: true,
     });
   },
 

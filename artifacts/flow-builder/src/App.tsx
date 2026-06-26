@@ -3,14 +3,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import FlowBuilder from "./components/flow/FlowBuilder";
+import FlowDashboard from "./pages/FlowDashboard";
+import FlowEditorPage from "./pages/FlowEditorPage";
 
 const queryClient = new QueryClient();
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={FlowBuilder} />
+      <Route path="/" component={FlowDashboard} />
+      <Route path="/flow/:id" component={FlowEditorPage} />
       <Route component={NotFound} />
     </Switch>
   );
