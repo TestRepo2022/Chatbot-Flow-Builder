@@ -14,6 +14,7 @@ import { useFlowStore } from '../../store/flowStore';
 import { ComponentPanel } from './ComponentPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { ValidationModal } from './ValidationModal';
+import { HistoryPanel } from './HistoryPanel';
 import { StartNode } from './nodes/StartNode';
 import { EndNode } from './nodes/EndNode';
 import { TextMessageNode } from './nodes/TextMessageNode';
@@ -32,7 +33,7 @@ import {
 } from './nodes/GenericNode';
 import {
   Save, Upload, Download, CheckCircle, Zap, Undo2, Redo2,
-  Moon, Sun, Edit2, Check
+  Moon, Sun, Edit2, Check, History
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -58,7 +59,7 @@ function FlowBuilderInner() {
     selectedNodeId, selectNode, deleteNode, deleteEdge,
     copyNode, pasteNode, undo, redo, canUndo, canRedo,
     addNode, flowName, flowStatus, lastSaved, setFlowName,
-    saveFlow, publishFlow, validateFlow, exportJSON, importJSON,
+    saveFlow, publishFlow, validateFlow, exportJSON, importJSON, saveSnapshot,
   } = useFlowStore();
 
   const reactFlowInstance = useReactFlow();
@@ -66,8 +67,11 @@ function FlowBuilderInner() {
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(flowName);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+
+  const versionSnapshots = useFlowStore((s) => s.versionSnapshots);
 
   // Dark mode
   useEffect(() => {
@@ -123,6 +127,7 @@ function FlowBuilderInner() {
         if (e.key === 's') {
           e.preventDefault();
           saveFlow();
+          saveSnapshot('manual');
         }
       }
     };
@@ -151,6 +156,7 @@ function FlowBuilderInner() {
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     selectNode(node.id);
+    setShowHistory(false);
   }, [selectNode]);
 
   const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
@@ -310,6 +316,30 @@ function FlowBuilderInner() {
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
+          {/* History */}
+          <button
+            onClick={() => { setShowHistory(!showHistory); selectNode(null); }}
+            className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors"
+            style={
+              showHistory
+                ? { background: 'hsl(var(--primary) / 0.15)', color: 'hsl(var(--primary))' }
+                : { color: 'hsl(var(--muted-foreground))' }
+            }
+            title="Version history"
+            data-testid="button-history"
+          >
+            <History size={13} />
+            History
+            {versionSnapshots.length > 0 && (
+              <span
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
+                style={{ background: 'hsl(var(--primary))', color: 'white' }}
+              >
+                {versionSnapshots.length}
+              </span>
+            )}
+          </button>
+
           <div className="w-px h-4" style={{ background: 'hsl(var(--border))' }} />
 
           {/* Import */}
@@ -350,7 +380,7 @@ function FlowBuilderInner() {
 
           {/* Save Draft */}
           <button
-            onClick={saveFlow}
+            onClick={() => { saveFlow(); saveSnapshot('manual'); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
             style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}
             title="Save draft (Ctrl+S)"
@@ -440,13 +470,16 @@ function FlowBuilderInner() {
           </div>
         </div>
 
-        {/* Right Panel */}
-        {selectedNodeId && (
+        {/* Right Panel — History takes priority; falls back to Properties */}
+        {(showHistory || selectedNodeId) && (
           <aside
             className="w-72 flex-shrink-0 overflow-hidden"
             style={{ borderLeft: '1px solid hsl(var(--border))' }}
           >
-            <PropertiesPanel />
+            {showHistory
+              ? <HistoryPanel onClose={() => setShowHistory(false)} />
+              : <PropertiesPanel />
+            }
           </aside>
         )}
       </div>

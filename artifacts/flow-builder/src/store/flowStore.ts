@@ -13,7 +13,7 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import { NODE_TYPES_CONFIG } from '../lib/nodeConfig';
-import { updateFlow, saveNodes, saveEdges, publishFlow as apiPublishFlow } from '../lib/api';
+import { updateFlow, publishFlow as apiPublishFlow } from '../lib/api';
 
 export interface FlowJSON {
   id: string;
@@ -27,6 +27,34 @@ export interface HistoryEntry {
   nodes: Node[];
   edges: Edge[];
   timestamp: number;
+}
+
+export interface VersionSnapshot {
+  id: string;
+  timestamp: number;
+  label: string;
+  nodeCount: number;
+  edgeCount: number;
+  nodes: Node[];
+  edges: Edge[];
+  flowName: string;
+  trigger: 'auto' | 'manual' | 'publish';
+}
+
+const SNAPSHOTS_KEY = 'flow_flow_1_history';
+const MAX_SNAPSHOTS = 10;
+
+function loadSnapshots(): VersionSnapshot[] {
+  try {
+    const raw = localStorage.getItem(SNAPSHOTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSnapshots(snapshots: VersionSnapshot[]) {
+  localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
 }
 
 export interface FlowStore {
@@ -45,6 +73,8 @@ export interface FlowStore {
   canUndo: boolean;
   canRedo: boolean;
 
+  versionSnapshots: VersionSnapshot[];
+
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   onNodesChange: OnNodesChange;
@@ -62,6 +92,10 @@ export interface FlowStore {
   pushHistory: () => void;
   undo: () => void;
   redo: () => void;
+
+  saveSnapshot: (trigger?: 'auto' | 'manual' | 'publish', label?: string) => void;
+  restoreSnapshot: (snapshotId: string) => void;
+  deleteSnapshot: (snapshotId: string) => void;
 
   setFlowName: (name: string) => void;
   publishFlow: () => void;
@@ -171,6 +205,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   historyIndex: 0,
   canUndo: false,
   canRedo: false,
+  versionSnapshots: loadSnapshots(),
 
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
@@ -302,6 +337,53 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     }
   },
 
+  saveSnapshot: (trigger = 'auto', label?: string) => {
+    const { nodes, edges, flowName, versionSnapshots } = get();
+    const now = Date.now();
+    const triggerLabels: Record<string, string> = {
+      auto: `Auto-save`,
+      manual: `Manual save`,
+      publish: `Published`,
+    };
+    const newSnap: VersionSnapshot = {
+      id: `snap_${now}`,
+      timestamp: now,
+      label: label || `${triggerLabels[trigger] || 'Save'} — ${new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      nodeCount: nodes.length,
+      edgeCount: edges.length,
+      nodes,
+      edges,
+      flowName,
+      trigger,
+    };
+    const updated = [newSnap, ...versionSnapshots].slice(0, MAX_SNAPSHOTS);
+    persistSnapshots(updated);
+    set({ versionSnapshots: updated });
+  },
+
+  restoreSnapshot: (snapshotId) => {
+    const { versionSnapshots } = get();
+    const snap = versionSnapshots.find((s) => s.id === snapshotId);
+    if (!snap) return;
+    set({
+      nodes: snap.nodes,
+      edges: snap.edges,
+      selectedNodeId: null,
+      history: [{ nodes: snap.nodes, edges: snap.edges, timestamp: Date.now() }],
+      historyIndex: 0,
+      canUndo: false,
+      canRedo: false,
+    });
+    get().saveFlow();
+  },
+
+  deleteSnapshot: (snapshotId) => {
+    const { versionSnapshots } = get();
+    const updated = versionSnapshots.filter((s) => s.id !== snapshotId);
+    persistSnapshots(updated);
+    set({ versionSnapshots: updated });
+  },
+
   setFlowName: (name) => set({ flowName: name }),
 
   publishFlow: () => {
@@ -309,6 +391,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     apiPublishFlow(flowId);
     set({ flowStatus: 'published', lastSaved: new Date() });
     localStorage.setItem(`flow_${flowId}`, JSON.stringify({ id: flowId, name: flowName, status: 'published', nodes, edges }));
+    get().saveSnapshot('publish');
   },
 
   saveAsDraft: () => {
