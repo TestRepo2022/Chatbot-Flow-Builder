@@ -1,0 +1,162 @@
+Build a complete Chatbot Flow Builder application inspired by AI Sensy's Flow Builder interface.
+
+The scope is ONLY the chatbot flow development module.
+
+Requirements:
+
+1. Create a visual drag-and-drop chatbot flow builder using React,React Flow, Tailwind CSS, Zustand, and Shadcn UI.
+
+2. The screen should contain:
+
+   * Left Component Panel
+   * Center Flow Canvas
+   * Right Properties Panel
+
+3. Left Component Panel should provide draggable chatbot components:
+
+   * Start Node
+   * Text Message
+   * Media Message
+   * Quick Reply Buttons
+   * List Message
+   * WhatsApp Form
+   * Condition Node
+   * User Input Node
+   * Ask Question Node
+   * Ask Location Node
+   * Ask Address Node
+   * API Request Node
+   * Connect Flow Node
+   * End Node
+
+4. Flow Canvas Requirements:
+
+   * Use React Flow.
+   * Allow drag-and-drop node creation.
+   * Allow node-to-node connections.
+   * Support multiple branches.
+   * Support reconnecting edges.
+   * Support deleting nodes and edges.
+   * Include Zoom In, Zoom Out, Fit View, Mini Map, and Controls.
+   * Auto-save flow changes.
+   * Undo/Redo support.
+   * Copy/Paste nodes.
+
+5. Node Features:
+   Each node should be a custom React Flow node.
+
+   Text Message Node:
+
+   * Title
+   * Message Content
+   * Variable placeholders
+   * Emoji support
+
+   Button Node:
+
+   * Multiple buttons
+   * Dynamic button labels
+   * Route buttons to different nodes
+
+   List Message Node:
+
+   * Header
+   * Body
+   * Footer
+   * Sections
+   * Rows
+
+   Form Node:
+
+   * Dynamic fields
+   * Required field validation
+   * Field types:
+
+     * Text
+     * Email
+     * Phone
+     * Number
+     * Dropdown
+
+   Condition Node:
+
+   * Variable selection
+   * Operators:
+
+     * Equals
+     * Not Equals
+     * Contains
+     * Greater Than
+     * Less Than
+   * True branch
+   * False branch
+
+   API Request Node:
+
+   * URL
+   * Method
+   * Headers
+   * Request Body
+   * Response Mapping
+
+6. Right Properties Panel:
+
+   * Open automatically when a node is selected.
+   * Allow editing all node properties.
+   * Changes should update node data in real time.
+   * Validation for required fields.
+
+7. State Management:
+   Use Zustand for:
+
+   * Nodes
+   * Edges
+   * Selected Node
+   * Flow Metadata
+   * Undo/Redo History
+
+8. Backend:
+   Mock APIs use only not implement.
+
+   APIs:
+
+   * Create Flow
+   * Update Flow
+   * Delete Flow
+   * Get Flow
+   * Save Nodes
+   * Save Edges
+   * Publish Flow
+   * Clone Flow
+   * Export Flow JSON
+   * Import Flow JSON
+
+9. Flow JSON Format:
+
+{
+"id": "flow_1",
+"name": "Travel Booking Bot",
+"nodes": [],
+"edges": []
+}
+
+10. Additional Features:
+
+* Flow validation before publishing.
+* Draft and Published versions.
+* Flow version history.
+* Import/Export JSON.
+* Search nodes.
+* Keyboard shortcuts.
+* Responsive design.
+* Dark mode support.
+* Smooth animations.
+* Production-ready architecture.
+
+11. Generate:
+
+* Complete frontend code.
+* React Flow custom nodes.
+* Zustand store.
+
+
