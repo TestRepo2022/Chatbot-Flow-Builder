@@ -1,8 +1,7 @@
 import { memo } from 'react';
-import { NodeProps } from 'reactflow';
 import { BaseNode } from './BaseNode';
 
-export const TextMessageNode = memo(function TextMessageNode({ id, type, selected, data }: NodeProps) {
+export const TextMessageNode = memo(function TextMessageNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && (
@@ -20,9 +19,9 @@ export const TextMessageNode = memo(function TextMessageNode({ id, type, selecte
       </div>
       {data.variables?.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
-          {data.variables.map((v: string, i: number) => (
+          {data.variables.map((v, i) => (
             <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              {'{{'}{v}{'}}'}
+              {`{{${v}}}`}
             </span>
           ))}
         </div>

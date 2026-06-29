@@ -1,12 +1,11 @@
 import { memo } from 'react';
-import { NodeProps } from 'reactflow';
 import { BaseNode } from './BaseNode';
 
-function truncate(str: string, n: number) {
+function truncate(str, n) {
   return str?.length > n ? str.slice(0, n) + '...' : str;
 }
 
-export const ListMessageNode = memo(function ListMessageNode({ id, type, selected, data }: NodeProps) {
+export const ListMessageNode = memo(function ListMessageNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
@@ -16,7 +15,7 @@ export const ListMessageNode = memo(function ListMessageNode({ id, type, selecte
         {data.sections?.length > 0 && (
           <div className="text-[10px] text-cyan-400">
             {data.sections.length} section{data.sections.length !== 1 ? 's' : ''} &bull;{' '}
-            {data.sections.reduce((acc: number, s: any) => acc + (s.rows?.length || 0), 0)} items
+            {data.sections.reduce((acc, s) => acc + (s.rows?.length || 0), 0)} items
           </div>
         )}
         {data.buttonText && (
@@ -29,13 +28,13 @@ export const ListMessageNode = memo(function ListMessageNode({ id, type, selecte
   );
 });
 
-export const WhatsappFormNode = memo(function WhatsappFormNode({ id, type, selected, data }: NodeProps) {
+export const WhatsappFormNode = memo(function WhatsappFormNode({ id, type, selected, data }) {
   const fields = data.fields || [];
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="space-y-1.5">
-        {fields.slice(0, 3).map((f: any, i: number) => (
+        {fields.slice(0, 3).map((f, i) => (
           <div key={i} className="flex items-center gap-2 text-xs rounded px-2 py-1.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
             <span className="text-pink-400 font-medium capitalize">{f.type}</span>
             <span className="text-foreground flex-1 truncate">{f.label}</span>
@@ -49,15 +48,17 @@ export const WhatsappFormNode = memo(function WhatsappFormNode({ id, type, selec
   );
 });
 
-export const UserInputNode = memo(function UserInputNode({ id, type, selected, data }: NodeProps) {
+export const UserInputNode = memo(function UserInputNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="space-y-1.5 rounded-lg p-2.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-        {data.prompt ? <div className="text-xs text-foreground line-clamp-2">{data.prompt}</div> : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
+        {data.prompt
+          ? <div className="text-xs text-foreground line-clamp-2">{data.prompt}</div>
+          : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
         {data.variableName && (
           <div className="text-[10px] font-mono px-1.5 py-0.5 rounded inline-block" style={{ background: '#14b8a622', color: '#14b8a6' }}>
-            → {'{{'}{data.variableName}{'}}'}
+            {`→ {{${data.variableName}}}`}
           </div>
         )}
       </div>
@@ -65,15 +66,17 @@ export const UserInputNode = memo(function UserInputNode({ id, type, selected, d
   );
 });
 
-export const AskQuestionNode = memo(function AskQuestionNode({ id, type, selected, data }: NodeProps) {
+export const AskQuestionNode = memo(function AskQuestionNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="rounded-lg p-2.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-        {data.question ? <div className="text-xs text-foreground line-clamp-3">{data.question}</div> : <div className="text-xs text-muted-foreground italic">No question set</div>}
+        {data.question
+          ? <div className="text-xs text-foreground line-clamp-3">{data.question}</div>
+          : <div className="text-xs text-muted-foreground italic">No question set</div>}
         {data.variableName && (
           <div className="text-[10px] font-mono mt-1.5 px-1.5 py-0.5 rounded inline-block" style={{ background: '#3b82f622', color: '#3b82f6' }}>
-            → {'{{'}{data.variableName}{'}}'}
+            {`→ {{${data.variableName}}}`}
           </div>
         )}
       </div>
@@ -81,32 +84,44 @@ export const AskQuestionNode = memo(function AskQuestionNode({ id, type, selecte
   );
 });
 
-export const AskLocationNode = memo(function AskLocationNode({ id, type, selected, data }: NodeProps) {
+export const AskLocationNode = memo(function AskLocationNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="rounded-lg p-2.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-        {data.prompt ? <div className="text-xs text-foreground">{truncate(data.prompt, 80)}</div> : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
-        {data.variableName && <div className="text-[10px] font-mono mt-1 px-1.5 py-0.5 rounded inline-block" style={{ background: '#ef444422', color: '#ef4444' }}>→ {'{{'}{data.variableName}{'}}'}</div>}
+        {data.prompt
+          ? <div className="text-xs text-foreground">{truncate(data.prompt, 80)}</div>
+          : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
+        {data.variableName && (
+          <div className="text-[10px] font-mono mt-1 px-1.5 py-0.5 rounded inline-block" style={{ background: '#ef444422', color: '#ef4444' }}>
+            {`→ {{${data.variableName}}}`}
+          </div>
+        )}
       </div>
     </BaseNode>
   );
 });
 
-export const AskAddressNode = memo(function AskAddressNode({ id, type, selected, data }: NodeProps) {
+export const AskAddressNode = memo(function AskAddressNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="rounded-lg p-2.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-        {data.prompt ? <div className="text-xs text-foreground">{truncate(data.prompt, 80)}</div> : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
-        {data.variableName && <div className="text-[10px] font-mono mt-1 px-1.5 py-0.5 rounded inline-block" style={{ background: '#84cc1622', color: '#84cc16' }}>→ {'{{'}{data.variableName}{'}}'}</div>}
+        {data.prompt
+          ? <div className="text-xs text-foreground">{truncate(data.prompt, 80)}</div>
+          : <div className="text-xs text-muted-foreground italic">No prompt set</div>}
+        {data.variableName && (
+          <div className="text-[10px] font-mono mt-1 px-1.5 py-0.5 rounded inline-block" style={{ background: '#84cc1622', color: '#84cc16' }}>
+            {`→ {{${data.variableName}}}`}
+          </div>
+        )}
       </div>
     </BaseNode>
   );
 });
 
-export const ApiRequestNode = memo(function ApiRequestNode({ id, type, selected, data }: NodeProps) {
-  const methodColors: Record<string, string> = {
+export const ApiRequestNode = memo(function ApiRequestNode({ id, type, selected, data }) {
+  const methodColors = {
     GET: '#10b981', POST: '#3b82f6', PUT: '#f59e0b', DELETE: '#ef4444', PATCH: '#8b5cf6'
   };
   return (
@@ -127,16 +142,14 @@ export const ApiRequestNode = memo(function ApiRequestNode({ id, type, selected,
   );
 });
 
-export const ConnectFlowNode = memo(function ConnectFlowNode({ id, type, selected, data }: NodeProps) {
+export const ConnectFlowNode = memo(function ConnectFlowNode({ id, type, selected, data }) {
   return (
     <BaseNode id={id} type={type} selected={selected}>
       {data.label && <div className="text-xs font-semibold text-muted-foreground mb-2 truncate">{data.label}</div>}
       <div className="rounded-lg p-2.5" style={{ background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-        {data.flowName ? (
-          <div className="text-xs text-sky-400 font-medium">{data.flowName}</div>
-        ) : (
-          <div className="text-xs text-muted-foreground italic">No flow selected</div>
-        )}
+        {data.flowName
+          ? <div className="text-xs text-sky-400 font-medium">{data.flowName}</div>
+          : <div className="text-xs text-muted-foreground italic">No flow selected</div>}
         {data.flowId && <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{data.flowId}</div>}
       </div>
     </BaseNode>

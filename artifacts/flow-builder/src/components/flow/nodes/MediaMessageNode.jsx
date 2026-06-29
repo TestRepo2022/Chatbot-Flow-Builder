@@ -1,15 +1,14 @@
 import { memo } from 'react';
-import { NodeProps } from 'reactflow';
 import { BaseNode } from './BaseNode';
 import { Image, Video, FileText, Music } from 'lucide-react';
 
 const mediaIcons = { image: Image, video: Video, document: FileText, audio: Music };
 const mediaColors = { image: '#8b5cf6', video: '#a855f7', document: '#c084fc', audio: '#7c3aed' };
 
-export const MediaMessageNode = memo(function MediaMessageNode({ id, type, selected, data }: NodeProps) {
+export const MediaMessageNode = memo(function MediaMessageNode({ id, type, selected, data }) {
   const mediaType = data.mediaType || 'image';
-  const Icon = mediaIcons[mediaType as keyof typeof mediaIcons] || Image;
-  const color = mediaColors[mediaType as keyof typeof mediaColors] || '#8b5cf6';
+  const Icon = mediaIcons[mediaType] || Image;
+  const color = mediaColors[mediaType] || '#8b5cf6';
 
   return (
     <BaseNode id={id} type={type} selected={selected}>

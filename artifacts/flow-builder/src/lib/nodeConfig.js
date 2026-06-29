@@ -3,18 +3,7 @@ import {
   GitBranch, Keyboard, HelpCircle, MapPin, Home, Globe, Link, Square
 } from 'lucide-react';
 
-export interface NodeTypeConfig {
-  type: string;
-  label: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  bgColor: string;
-  category: string;
-  description: string;
-  defaultData: Record<string, any>;
-}
-
-export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
+export const NODE_TYPES_CONFIG = [
   {
     type: 'startNode',
     label: 'Start Node',
@@ -53,7 +42,7 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     bgColor: '#451a03',
     category: 'Messages',
     description: 'Message with quick reply buttons',
-    defaultData: { label: 'Quick Reply', message: '', buttons: [{ id: 'btn_1', text: 'Option 1' }] },
+    defaultData: { label: 'Quick Reply', message: '', buttons: [{ id: '1', text: 'Option 1' }] },
   },
   {
     type: 'listMessage',
@@ -68,8 +57,8 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
       header: '',
       body: '',
       footer: '',
-      buttonText: 'Choose',
-      sections: [{ title: 'Section 1', rows: [{ id: 'row_1', title: 'Option 1', description: '' }] }],
+      buttonText: 'View Options',
+      sections: [{ title: 'Section 1', rows: [{ id: '1', title: 'Item 1', description: '' }] }],
     },
   },
   {
@@ -82,7 +71,7 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     description: 'Dynamic form with fields',
     defaultData: {
       label: 'WhatsApp Form',
-      fields: [{ id: 'field_1', label: 'Name', type: 'text', required: true }],
+      fields: [{ id: '1', label: 'Name', type: 'text', required: true }],
     },
   },
   {
@@ -92,7 +81,7 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     color: '#f97316',
     bgColor: '#431407',
     category: 'Logic',
-    description: 'Branch based on condition',
+    description: 'Branch based on conditions',
     defaultData: { label: 'Condition', variable: '', operator: 'equals', value: '' },
   },
   {
@@ -107,12 +96,12 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
   },
   {
     type: 'askQuestion',
-    label: 'Ask Question',
+    label: 'Ask a Question',
     icon: HelpCircle,
     color: '#3b82f6',
     bgColor: '#1e3a5f',
     category: 'Inputs',
-    description: 'Ask and wait for an answer',
+    description: 'Ask and save answer to variable',
     defaultData: { label: 'Ask Question', question: '', variableName: '' },
   },
   {
@@ -122,7 +111,7 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     color: '#ef4444',
     bgColor: '#450a0a',
     category: 'Inputs',
-    description: 'Request GPS location',
+    description: 'Request user location',
     defaultData: { label: 'Ask Location', prompt: '', variableName: '' },
   },
   {
@@ -132,7 +121,7 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     color: '#84cc16',
     bgColor: '#1a2e05',
     category: 'Inputs',
-    description: 'Request postal address',
+    description: 'Request structured address',
     defaultData: { label: 'Ask Address', prompt: '', variableName: '' },
   },
   {
@@ -142,14 +131,14 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
     color: '#a855f7',
     bgColor: '#2e1065',
     category: 'Actions',
-    description: 'Make an HTTP request',
+    description: 'Make an HTTP API call',
     defaultData: {
       label: 'API Request',
       url: '',
       method: 'GET',
-      headers: [],
+      headers: '',
       body: '',
-      responseMapping: [],
+      responseMapping: '',
     },
   },
   {
@@ -176,6 +165,6 @@ export const NODE_TYPES_CONFIG: NodeTypeConfig[] = [
 
 export const CATEGORIES = ['Flow Control', 'Messages', 'Inputs', 'Logic', 'Actions'];
 
-export function getNodeConfig(type: string): NodeTypeConfig | undefined {
-  return NODE_TYPES_CONFIG.find(n => n.type === type);
+export function getNodeConfig(type) {
+  return NODE_TYPES_CONFIG.find((n) => n.type === type);
 }

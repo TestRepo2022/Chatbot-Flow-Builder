@@ -2,7 +2,7 @@ import { useFlowStore } from '../../store/flowStore';
 import { getNodeConfig } from '../../lib/nodeConfig';
 import { X, Plus, Trash2 } from 'lucide-react';
 
-function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldRow({ label, children }) {
   return (
     <div className="space-y-1">
       <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</label>
@@ -11,7 +11,7 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-function TextInput({ value, onChange, placeholder, multiline }: { value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean }) {
+function TextInput({ value, onChange, placeholder, multiline }) {
   const cls = "w-full px-3 py-2 text-xs rounded-lg outline-none transition-all resize-none";
   const style = { background: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' };
   if (multiline) {
@@ -20,7 +20,7 @@ function TextInput({ value, onChange, placeholder, multiline }: { value: string;
   return <input type="text" className={cls} style={style} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
 }
 
-function SelectInput({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+function SelectInput({ value, onChange, options }) {
   return (
     <select
       className="w-full px-3 py-2 text-xs rounded-lg outline-none"
@@ -35,7 +35,7 @@ function SelectInput({ value, onChange, options }: { value: string; onChange: (v
   );
 }
 
-function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
+function AddButton({ onClick, label }) {
   return (
     <button
       onClick={onClick}
@@ -47,7 +47,7 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
   );
 }
 
-function RemoveButton({ onClick }: { onClick: () => void }) {
+function RemoveButton({ onClick }) {
   return (
     <button onClick={onClick} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
       <Trash2 size={12} />
@@ -55,7 +55,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function TextMessageProps({ data, update }: { data: any; update: (d: any) => void }) {
+function TextMessageProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label">
@@ -66,7 +66,7 @@ function TextMessageProps({ data, update }: { data: any; update: (d: any) => voi
       </FieldRow>
       <FieldRow label="Variables">
         <div className="space-y-1.5">
-          {(data.variables || []).map((v: string, i: number) => (
+          {(data.variables || []).map((v, i) => (
             <div key={i} className="flex gap-2">
               <TextInput value={v} onChange={(val) => {
                 const vars = [...(data.variables || [])];
@@ -74,7 +74,7 @@ function TextMessageProps({ data, update }: { data: any; update: (d: any) => voi
                 update({ variables: vars });
               }} placeholder="variable_name" />
               <RemoveButton onClick={() => {
-                const vars = (data.variables || []).filter((_: any, idx: number) => idx !== i);
+                const vars = (data.variables || []).filter((_, idx) => idx !== i);
                 update({ variables: vars });
               }} />
             </div>
@@ -86,7 +86,7 @@ function TextMessageProps({ data, update }: { data: any; update: (d: any) => voi
   );
 }
 
-function MediaMessageProps({ data, update }: { data: any; update: (d: any) => void }) {
+function MediaMessageProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
@@ -94,8 +94,8 @@ function MediaMessageProps({ data, update }: { data: any; update: (d: any) => vo
         <SelectInput value={data.mediaType} onChange={(v) => update({ mediaType: v })} options={[
           { value: 'image', label: 'Image' },
           { value: 'video', label: 'Video' },
-          { value: 'document', label: 'Document' },
           { value: 'audio', label: 'Audio' },
+          { value: 'document', label: 'Document' },
         ]} />
       </FieldRow>
       <FieldRow label="URL"><TextInput value={data.url} onChange={(v) => update({ url: v })} placeholder="https://..." /></FieldRow>
@@ -104,7 +104,7 @@ function MediaMessageProps({ data, update }: { data: any; update: (d: any) => vo
   );
 }
 
-function QuickReplyProps({ data, update }: { data: any; update: (d: any) => void }) {
+function QuickReplyProps({ data, update }) {
   const buttons = data.buttons || [];
   return (
     <div className="space-y-4">
@@ -112,7 +112,7 @@ function QuickReplyProps({ data, update }: { data: any; update: (d: any) => void
       <FieldRow label="Message"><TextInput value={data.message} onChange={(v) => update({ message: v })} placeholder="Message text" multiline /></FieldRow>
       <FieldRow label="Buttons">
         <div className="space-y-2">
-          {buttons.map((btn: { id: string; text: string }, i: number) => (
+          {buttons.map((btn, i) => (
             <div key={btn.id} className="flex gap-2 items-center">
               <div className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0" style={{ background: 'hsl(var(--muted))' }}>{i + 1}</div>
               <TextInput value={btn.text} onChange={(v) => {
@@ -120,7 +120,7 @@ function QuickReplyProps({ data, update }: { data: any; update: (d: any) => void
                 btns[i] = { ...btn, text: v };
                 update({ buttons: btns });
               }} placeholder={`Button ${i + 1} label`} />
-              <RemoveButton onClick={() => update({ buttons: buttons.filter((_: any, idx: number) => idx !== i) })} />
+              <RemoveButton onClick={() => update({ buttons: buttons.filter((_, idx) => idx !== i) })} />
             </div>
           ))}
           {buttons.length < 3 && (
@@ -133,7 +133,7 @@ function QuickReplyProps({ data, update }: { data: any; update: (d: any) => void
   );
 }
 
-function ListMessageProps({ data, update }: { data: any; update: (d: any) => void }) {
+function ListMessageProps({ data, update }) {
   const sections = data.sections || [];
   return (
     <div className="space-y-4">
@@ -144,7 +144,7 @@ function ListMessageProps({ data, update }: { data: any; update: (d: any) => voi
       <FieldRow label="Button Text"><TextInput value={data.buttonText} onChange={(v) => update({ buttonText: v })} placeholder="Choose an option" /></FieldRow>
       <FieldRow label="Sections">
         <div className="space-y-3">
-          {sections.map((sec: any, si: number) => (
+          {sections.map((sec, si) => (
             <div key={si} className="rounded-lg p-3 space-y-2" style={{ background: 'hsl(var(--muted) / 0.3)', border: '1px solid hsl(var(--border))' }}>
               <div className="flex gap-2">
                 <TextInput value={sec.title} onChange={(v) => {
@@ -152,9 +152,9 @@ function ListMessageProps({ data, update }: { data: any; update: (d: any) => voi
                   secs[si] = { ...sec, title: v };
                   update({ sections: secs });
                 }} placeholder="Section title" />
-                <RemoveButton onClick={() => update({ sections: sections.filter((_: any, idx: number) => idx !== si) })} />
+                <RemoveButton onClick={() => update({ sections: sections.filter((_, idx) => idx !== si) })} />
               </div>
-              {(sec.rows || []).map((row: any, ri: number) => (
+              {(sec.rows || []).map((row, ri) => (
                 <div key={ri} className="flex gap-2 pl-2">
                   <div className="flex-1 space-y-1">
                     <TextInput value={row.title} onChange={(v) => {
@@ -170,7 +170,7 @@ function ListMessageProps({ data, update }: { data: any; update: (d: any) => voi
                   </div>
                   <RemoveButton onClick={() => {
                     const secs = [...sections];
-                    secs[si].rows = secs[si].rows.filter((_: any, idx: number) => idx !== ri);
+                    secs[si].rows = secs[si].rows.filter((_, idx) => idx !== ri);
                     update({ sections: secs });
                   }} />
                 </div>
@@ -194,29 +194,29 @@ function ListMessageProps({ data, update }: { data: any; update: (d: any) => voi
   );
 }
 
-function FormProps({ data, update }: { data: any; update: (d: any) => void }) {
+function FormProps({ data, update }) {
   const fields = data.fields || [];
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
       <FieldRow label="Form Fields">
         <div className="space-y-2">
-          {fields.map((f: any, i: number) => (
+          {fields.map((f, i) => (
             <div key={f.id} className="rounded-lg p-3 space-y-2" style={{ background: 'hsl(var(--muted) / 0.3)', border: '1px solid hsl(var(--border))' }}>
               <div className="flex gap-2">
                 <TextInput value={f.label} onChange={(v) => {
                   const fs = [...fields]; fs[i] = { ...f, label: v }; update({ fields: fs });
                 }} placeholder="Field label" />
-                <RemoveButton onClick={() => update({ fields: fields.filter((_: any, idx: number) => idx !== i) })} />
+                <RemoveButton onClick={() => update({ fields: fields.filter((_, idx) => idx !== i) })} />
               </div>
               <div className="flex gap-2 items-center">
                 <SelectInput value={f.type} onChange={(v) => {
                   const fs = [...fields]; fs[i] = { ...f, type: v }; update({ fields: fs });
                 }} options={[
                   { value: 'text', label: 'Text' },
+                  { value: 'number', label: 'Number' },
                   { value: 'email', label: 'Email' },
                   { value: 'phone', label: 'Phone' },
-                  { value: 'number', label: 'Number' },
                   { value: 'dropdown', label: 'Dropdown' },
                 ]} />
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
@@ -226,11 +226,6 @@ function FormProps({ data, update }: { data: any; update: (d: any) => void }) {
                   Required
                 </label>
               </div>
-              {f.type === 'dropdown' && (
-                <TextInput value={(f.options || []).join(', ')} onChange={(v) => {
-                  const fs = [...fields]; fs[i] = { ...f, options: v.split(',').map((s: string) => s.trim()) }; update({ fields: fs });
-                }} placeholder="Option 1, Option 2, Option 3" />
-              )}
             </div>
           ))}
           <AddButton label="Add Field" onClick={() => update({ fields: [...fields, { id: `field_${Date.now()}`, label: '', type: 'text', required: false }] })} />
@@ -240,7 +235,7 @@ function FormProps({ data, update }: { data: any; update: (d: any) => void }) {
   );
 }
 
-function ConditionProps({ data, update }: { data: any; update: (d: any) => void }) {
+function ConditionProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
@@ -250,8 +245,8 @@ function ConditionProps({ data, update }: { data: any; update: (d: any) => void 
           { value: 'equals', label: 'Equals (==)' },
           { value: 'not_equals', label: 'Not Equals (!=)' },
           { value: 'contains', label: 'Contains' },
-          { value: 'greater_than', label: 'Greater Than (>)' },
-          { value: 'less_than', label: 'Less Than (<)' },
+          { value: 'greater_than', label: 'Greater Than' },
+          { value: 'less_than', label: 'Less Than' },
         ]} />
       </FieldRow>
       <FieldRow label="Value"><TextInput value={data.value} onChange={(v) => update({ value: v })} placeholder="Comparison value" /></FieldRow>
@@ -264,7 +259,7 @@ function ConditionProps({ data, update }: { data: any; update: (d: any) => void 
   );
 }
 
-function ApiRequestProps({ data, update }: { data: any; update: (d: any) => void }) {
+function ApiRequestProps({ data, update }) {
   const headers = data.headers || [];
   const responseMapping = data.responseMapping || [];
   return (
@@ -272,19 +267,21 @@ function ApiRequestProps({ data, update }: { data: any; update: (d: any) => void
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
       <FieldRow label="Method">
         <SelectInput value={data.method} onChange={(v) => update({ method: v })} options={[
-          { value: 'GET', label: 'GET' }, { value: 'POST', label: 'POST' },
-          { value: 'PUT', label: 'PUT' }, { value: 'PATCH', label: 'PATCH' },
+          { value: 'GET', label: 'GET' },
+          { value: 'POST', label: 'POST' },
+          { value: 'PUT', label: 'PUT' },
+          { value: 'PATCH', label: 'PATCH' },
           { value: 'DELETE', label: 'DELETE' },
         ]} />
       </FieldRow>
       <FieldRow label="URL"><TextInput value={data.url} onChange={(v) => update({ url: v })} placeholder="https://api.example.com/endpoint" /></FieldRow>
       <FieldRow label="Headers">
         <div className="space-y-1.5">
-          {headers.map((h: any, i: number) => (
+          {headers.map((h, i) => (
             <div key={i} className="flex gap-1.5">
               <TextInput value={h.key} onChange={(v) => { const hs = [...headers]; hs[i] = { ...h, key: v }; update({ headers: hs }); }} placeholder="Key" />
               <TextInput value={h.value} onChange={(v) => { const hs = [...headers]; hs[i] = { ...h, value: v }; update({ headers: hs }); }} placeholder="Value" />
-              <RemoveButton onClick={() => update({ headers: headers.filter((_: any, idx: number) => idx !== i) })} />
+              <RemoveButton onClick={() => update({ headers: headers.filter((_, idx) => idx !== i) })} />
             </div>
           ))}
           <AddButton label="Add Header" onClick={() => update({ headers: [...headers, { key: '', value: '' }] })} />
@@ -293,11 +290,11 @@ function ApiRequestProps({ data, update }: { data: any; update: (d: any) => void
       <FieldRow label="Request Body"><TextInput value={data.body} onChange={(v) => update({ body: v })} placeholder='{"key": "value"}' multiline /></FieldRow>
       <FieldRow label="Response Mapping">
         <div className="space-y-1.5">
-          {responseMapping.map((m: any, i: number) => (
+          {responseMapping.map((m, i) => (
             <div key={i} className="flex gap-1.5">
               <TextInput value={m.jsonPath} onChange={(v) => { const rm = [...responseMapping]; rm[i] = { ...m, jsonPath: v }; update({ responseMapping: rm }); }} placeholder="$.data.id" />
               <TextInput value={m.variableName} onChange={(v) => { const rm = [...responseMapping]; rm[i] = { ...m, variableName: v }; update({ responseMapping: rm }); }} placeholder="var_name" />
-              <RemoveButton onClick={() => update({ responseMapping: responseMapping.filter((_: any, idx: number) => idx !== i) })} />
+              <RemoveButton onClick={() => update({ responseMapping: responseMapping.filter((_, idx) => idx !== i) })} />
             </div>
           ))}
           <AddButton label="Add Mapping" onClick={() => update({ responseMapping: [...responseMapping, { jsonPath: '', variableName: '' }] })} />
@@ -307,11 +304,11 @@ function ApiRequestProps({ data, update }: { data: any; update: (d: any) => void
   );
 }
 
-function SimpleInputProps({ data, update, promptLabel = 'Prompt', showVariableName = true }: { data: any; update: (d: any) => void; promptLabel?: string; showVariableName?: boolean }) {
+function SimpleInputProps({ data, update, promptLabel = 'Prompt', showVariableName = true }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
-      <FieldRow label={promptLabel}><TextInput value={data.prompt || data.question} onChange={(v) => update({ prompt: v, question: v })} placeholder="Enter prompt text..." multiline /></FieldRow>
+      <FieldRow label={promptLabel}><TextInput value={data.prompt || data.question || ''} onChange={(v) => update({ prompt: v, question: v })} placeholder="Enter prompt text..." multiline /></FieldRow>
       {showVariableName && (
         <FieldRow label="Save Response to Variable">
           <TextInput value={data.variableName} onChange={(v) => update({ variableName: v })} placeholder="variable_name" />
@@ -330,7 +327,7 @@ function SimpleInputProps({ data, update, promptLabel = 'Prompt', showVariableNa
   );
 }
 
-function ConnectFlowProps({ data, update }: { data: any; update: (d: any) => void }) {
+function ConnectFlowProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
@@ -340,18 +337,18 @@ function ConnectFlowProps({ data, update }: { data: any; update: (d: any) => voi
   );
 }
 
-function EndNodeProps({ data, update }: { data: any; update: (d: any) => void }) {
+function EndNodeProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} /></FieldRow>
       <FieldRow label="Closing Message (optional)">
-        <TextInput value={data.message} onChange={(v) => update({ message: v })} placeholder="Thank you! Goodbye." multiline />
+        <TextInput value={data.message} onChange={(v) => update({ message: v })} placeholder="Thank you. Goodbye." multiline />
       </FieldRow>
     </div>
   );
 }
 
-function StartNodeProps({ data, update }: { data: any; update: (d: any) => void }) {
+function StartNodeProps({ data, update }) {
   return (
     <div className="space-y-4">
       <FieldRow label="Label"><TextInput value={data.label} onChange={(v) => update({ label: v })} placeholder="Start" /></FieldRow>
@@ -371,11 +368,10 @@ export function PropertiesPanel() {
   const config = getNodeConfig(selectedNode.type || '');
   const Icon = config?.icon;
 
-  const update = (d: any) => updateNodeData(selectedNode.id, d);
+  const update = (d) => updateNodeData(selectedNode.id, d);
 
   function renderProps() {
-    const type = selectedNode!.type;
-    const data = selectedNode!.data;
+    const { type, data } = selectedNode;
     switch (type) {
       case 'startNode': return <StartNodeProps data={data} update={update} />;
       case 'textMessage': return <TextMessageProps data={data} update={update} />;
@@ -397,7 +393,6 @@ export function PropertiesPanel() {
 
   return (
     <div className="flex flex-col h-full panel-slide-in" style={{ background: 'hsl(var(--sidebar))' }}>
-      {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-2" style={{ borderBottom: '1px solid hsl(var(--sidebar-border))' }}>
         {Icon && config && (
           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: config.color + '22' }}>
@@ -411,24 +406,20 @@ export function PropertiesPanel() {
         <button
           onClick={() => selectNode(null)}
           className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors flex-shrink-0"
-          data-testid="button-close-properties"
         >
           <X size={14} />
         </button>
       </div>
 
-      {/* Properties */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {renderProps()}
       </div>
 
-      {/* Footer: delete */}
       <div className="px-4 py-3" style={{ borderTop: '1px solid hsl(var(--sidebar-border))' }}>
         <button
           onClick={() => useFlowStore.getState().deleteNode(selectedNode.id)}
           className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium rounded-lg transition-colors hover:bg-red-500/15"
           style={{ color: 'hsl(var(--destructive))', border: '1px solid hsl(var(--destructive) / 0.3)' }}
-          data-testid="button-delete-node"
         >
           <Trash2 size={13} />
           Delete Node

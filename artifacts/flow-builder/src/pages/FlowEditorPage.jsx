@@ -4,7 +4,7 @@ import { useFlowStore } from '../store/flowStore';
 import FlowBuilder from '../components/flow/FlowBuilder';
 
 export default function FlowEditorPage() {
-  const params = useParams<{ id: string }>();
+  const params = useParams();
   const { loadFlow, isLoaded, flowId } = useFlowStore();
 
   useEffect(() => {

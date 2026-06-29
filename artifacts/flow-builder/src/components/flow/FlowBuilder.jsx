@@ -7,8 +7,6 @@ import ReactFlow, {
   BackgroundVariant,
   ReactFlowProvider,
   useReactFlow,
-  Node,
-  Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useFlowStore } from '../../store/flowStore';
@@ -68,14 +66,13 @@ function FlowBuilderInner() {
   const [darkMode, setDarkMode] = useState(true);
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(flowName);
-  const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
+  const [validationResult, setValidationResult] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
-  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const importRef = useRef<HTMLInputElement>(null);
+  const autoSaveRef = useRef(null);
+  const importRef = useRef(null);
 
   const versionSnapshots = useFlowStore((s) => s.versionSnapshots);
 
-  // Dark mode
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -84,7 +81,6 @@ function FlowBuilderInner() {
     }
   }, [darkMode]);
 
-  // Auto-save every 2s (debounced)
   useEffect(() => {
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
@@ -95,60 +91,40 @@ function FlowBuilderInner() {
     };
   }, [nodes, edges, saveFlow]);
 
-  // Keyboard shortcuts
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
+    const handler = (e) => {
+      const target = e.target;
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
       if (!isInput) {
         if (e.key === 'Delete' || e.key === 'Backspace') {
-          if (selectedNodeId) {
-            deleteNode(selectedNodeId);
-          }
+          if (selectedNodeId) deleteNode(selectedNodeId);
         }
       }
 
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'z' && !e.shiftKey) {
-          e.preventDefault();
-          undo();
-        }
-        if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
-          e.preventDefault();
-          redo();
-        }
-        if (e.key === 'c' && selectedNodeId && !isInput) {
-          e.preventDefault();
-          copyNode(selectedNodeId);
-        }
-        if (e.key === 'v' && !isInput) {
-          e.preventDefault();
-          pasteNode();
-        }
-        if (e.key === 's') {
-          e.preventDefault();
-          saveFlow();
-          saveSnapshot('manual');
-        }
+        if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+        if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+        if (e.key === 'c' && selectedNodeId && !isInput) { e.preventDefault(); copyNode(selectedNodeId); }
+        if (e.key === 'v' && !isInput) { e.preventDefault(); pasteNode(); }
+        if (e.key === 's') { e.preventDefault(); saveFlow(); saveSnapshot('manual'); }
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeId, deleteNode, undo, redo, copyNode, pasteNode, saveFlow]);
+  }, [selectedNodeId, deleteNode, undo, redo, copyNode, pasteNode, saveFlow, saveSnapshot]);
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
+  const onDragOver = useCallback((e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onDrop = useCallback((e: React.DragEvent) => {
+  const onDrop = useCallback((e) => {
     e.preventDefault();
     const type = e.dataTransfer.getData('application/reactflow');
     if (!type) return;
-
-    const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const bounds = e.currentTarget.getBoundingClientRect();
     const position = reactFlowInstance.project({
       x: e.clientX - bounds.left,
       y: e.clientY - bounds.top,
@@ -156,12 +132,12 @@ function FlowBuilderInner() {
     addNode(type, position);
   }, [reactFlowInstance, addNode]);
 
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((_, node) => {
     selectNode(node.id);
     setShowHistory(false);
   }, [selectNode]);
 
-  const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
+  const onEdgeClick = useCallback((_, edge) => {
     if (window.confirm('Delete this connection?')) {
       deleteEdge(edge.id);
     }
@@ -182,13 +158,13 @@ function FlowBuilderInner() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const json = JSON.parse(ev.target?.result as string);
+        const json = JSON.parse(ev.target?.result);
         importJSON(json);
       } catch (_) {
         alert('Invalid JSON file');
@@ -199,8 +175,7 @@ function FlowBuilderInner() {
   };
 
   const handleValidate = () => {
-    const result = validateFlow();
-    setValidationResult(result);
+    setValidationResult(validateFlow());
   };
 
   const handlePublish = () => {
@@ -223,21 +198,15 @@ function FlowBuilderInner() {
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-background text-foreground">
-      {/* ── TOP TOOLBAR ─────────────────────────────────────────────── */}
       <header
         className="flex items-center gap-3 px-4 h-12 flex-shrink-0 z-20"
-        style={{
-          background: 'hsl(var(--card))',
-          borderBottom: '1px solid hsl(var(--border))',
-        }}
+        style={{ background: 'hsl(var(--card))', borderBottom: '1px solid hsl(var(--border))' }}
       >
-        {/* Back button + Logo + Flow Name */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <button
             onClick={() => { saveFlow(); setLocation('/'); }}
             className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             title="Back to dashboard"
-            data-testid="button-back-to-dashboard"
           >
             <ChevronLeft size={16} />
           </button>
@@ -248,6 +217,7 @@ function FlowBuilderInner() {
           >
             FB
           </div>
+
           {editingName ? (
             <div className="flex items-center gap-1">
               <input
@@ -257,7 +227,6 @@ function FlowBuilderInner() {
                 onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
                 className="text-sm font-semibold bg-transparent outline-none border-b px-1"
                 style={{ borderColor: 'hsl(var(--primary))', color: 'hsl(var(--foreground))', width: Math.max(120, tempName.length * 8) + 'px' }}
-                data-testid="input-flow-name"
               />
               <button onClick={saveName} className="w-5 h-5 rounded flex items-center justify-center text-green-400 hover:bg-green-500/10">
                 <Check size={12} />
@@ -267,14 +236,12 @@ function FlowBuilderInner() {
             <button
               onClick={() => { setTempName(flowName); setEditingName(true); }}
               className="flex items-center gap-1.5 text-sm font-semibold hover:text-primary transition-colors group"
-              data-testid="button-edit-flow-name"
             >
               {flowName}
               <Edit2 size={11} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
             </button>
           )}
 
-          {/* Status badge */}
           <span
             className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
             style={
@@ -287,17 +254,14 @@ function FlowBuilderInner() {
           </span>
         </div>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Center: undo/redo + last saved */}
         <div className="flex items-center gap-1">
           <button
             onClick={undo}
             disabled={!canUndo}
             className="w-7 h-7 rounded-md flex items-center justify-center transition-colors disabled:opacity-30 hover:bg-white/5"
             title="Undo (Ctrl+Z)"
-            data-testid="button-undo"
           >
             <Undo2 size={14} />
           </button>
@@ -306,7 +270,6 @@ function FlowBuilderInner() {
             disabled={!canRedo}
             className="w-7 h-7 rounded-md flex items-center justify-center transition-colors disabled:opacity-30 hover:bg-white/5"
             title="Redo (Ctrl+Y)"
-            data-testid="button-redo"
           >
             <Redo2 size={14} />
           </button>
@@ -315,19 +278,15 @@ function FlowBuilderInner() {
 
         <div className="flex-1" />
 
-        {/* Right actions */}
         <div className="flex items-center gap-1.5">
-          {/* Dark mode toggle */}
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             title="Toggle dark mode"
-            data-testid="button-toggle-dark-mode"
           >
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
-          {/* History */}
           <button
             onClick={() => { setShowHistory(!showHistory); selectNode(null); }}
             className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors"
@@ -337,7 +296,6 @@ function FlowBuilderInner() {
                 : { color: 'hsl(var(--muted-foreground))' }
             }
             title="Version history"
-            data-testid="button-history"
           >
             <History size={13} />
             History
@@ -353,35 +311,29 @@ function FlowBuilderInner() {
 
           <div className="w-px h-4" style={{ background: 'hsl(var(--border))' }} />
 
-          {/* Import */}
           <input ref={importRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           <button
             onClick={() => importRef.current?.click()}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             title="Import JSON"
-            data-testid="button-import"
           >
             <Upload size={13} />
             Import
           </button>
 
-          {/* Export */}
           <button
             onClick={handleExport}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             title="Export JSON"
-            data-testid="button-export"
           >
             <Download size={13} />
             Export
           </button>
 
-          {/* Validate */}
           <button
             onClick={handleValidate}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             title="Validate flow"
-            data-testid="button-validate"
           >
             <CheckCircle size={13} />
             Validate
@@ -389,24 +341,20 @@ function FlowBuilderInner() {
 
           <div className="w-px h-4" style={{ background: 'hsl(var(--border))' }} />
 
-          {/* Save Draft */}
           <button
             onClick={() => { saveFlow(); saveSnapshot('manual'); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
             style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}
             title="Save draft (Ctrl+S)"
-            data-testid="button-save"
           >
             <Save size={13} />
             Save
           </button>
 
-          {/* Publish */}
           <button
             onClick={handlePublish}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{ background: 'hsl(var(--primary))', color: 'white' }}
-            data-testid="button-publish"
           >
             <Zap size={13} />
             Publish
@@ -414,17 +362,11 @@ function FlowBuilderInner() {
         </div>
       </header>
 
-      {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel */}
-        <aside
-          className="w-56 flex-shrink-0 overflow-hidden"
-          style={{ borderRight: '1px solid hsl(var(--border))' }}
-        >
+        <aside className="w-56 flex-shrink-0 overflow-hidden" style={{ borderRight: '1px solid hsl(var(--border))' }}>
           <ComponentPanel />
         </aside>
 
-        {/* Canvas */}
         <div className="flex-1 relative" onDragOver={onDragOver} onDrop={onDrop}>
           <ReactFlow
             nodes={nodes}
@@ -447,17 +389,12 @@ function FlowBuilderInner() {
             selectionKeyCode="Shift"
             multiSelectionKeyCode="Shift"
           >
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={20}
-              size={1.5}
-              color="hsl(var(--border))"
-            />
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} color="hsl(var(--border))" />
             <Controls position="bottom-left" />
             <MiniMap
               position="bottom-right"
               nodeColor={(n) => {
-                const colors: Record<string, string> = {
+                const colors = {
                   startNode: '#10b981', endNode: '#64748b',
                   textMessage: '#6366f1', mediaMessage: '#8b5cf6',
                   quickReply: '#f59e0b', listMessage: '#06b6d4',
@@ -472,7 +409,6 @@ function FlowBuilderInner() {
             />
           </ReactFlow>
 
-          {/* Canvas keyboard shortcut hint */}
           <div
             className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground px-3 py-1.5 rounded-full pointer-events-none"
             style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
@@ -481,12 +417,8 @@ function FlowBuilderInner() {
           </div>
         </div>
 
-        {/* Right Panel — History takes priority; falls back to Properties */}
         {(showHistory || selectedNodeId) && (
-          <aside
-            className="w-72 flex-shrink-0 overflow-hidden"
-            style={{ borderLeft: '1px solid hsl(var(--border))' }}
-          >
+          <aside className="w-72 flex-shrink-0 overflow-hidden" style={{ borderLeft: '1px solid hsl(var(--border))' }}>
             {showHistory
               ? <HistoryPanel onClose={() => setShowHistory(false)} />
               : <PropertiesPanel />
@@ -495,7 +427,6 @@ function FlowBuilderInner() {
         )}
       </div>
 
-      {/* Validation Modal */}
       {validationResult && (
         <ValidationModal
           result={validationResult}

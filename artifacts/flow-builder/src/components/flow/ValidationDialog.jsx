@@ -2,11 +2,8 @@ import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface ValidationDialogProps {
-  open: boolean;
-  onClose: () => void;
-  result: { valid: boolean; errors: string[] } | null;
-  onPublish?: () => void;
+ | null;
+  onPublish?=> void;
 }
 
 export function ValidationDialog({ open, onClose, result, onPublish }: ValidationDialogProps) {
@@ -15,7 +12,7 @@ export function ValidationDialog({ open, onClose, result, onPublish }: Validatio
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
+        
           <DialogTitle className="flex items-center gap-2">
             {result.valid ? (
               <><CheckCircle size={18} className="text-green-500" /> Flow Validation Passed</>

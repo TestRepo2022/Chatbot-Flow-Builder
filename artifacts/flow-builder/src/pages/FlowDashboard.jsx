@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import {
-  getFlowList, createFlow, saveFlow, deleteFlow, cloneFlow, renameFlow, FlowMeta
+  getFlowList, createFlow, saveFlow, deleteFlow, cloneFlow, renameFlow
 } from '../lib/api';
 import {
   Plus, Search, Zap, FileText, Copy, Trash2, Edit2,
@@ -9,7 +9,7 @@ import {
   MoreHorizontal, Clock, Globe
 } from 'lucide-react';
 
-function timeAgo(ts: number): string {
+function timeAgo(ts) {
   const diff = Date.now() - ts;
   const m = Math.floor(diff / 60000);
   if (m < 1) return 'Just now';
@@ -21,7 +21,7 @@ function timeAgo(ts: number): string {
   return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-function StatusBadge({ status }: { status: 'draft' | 'published' }) {
+function StatusBadge({ status }) {
   if (status === 'published') {
     return (
       <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
@@ -38,13 +38,7 @@ function StatusBadge({ status }: { status: 'draft' | 'published' }) {
   );
 }
 
-function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
-  flow: FlowMeta;
-  onOpen: () => void;
-  onRename: (name: string) => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-}) {
+function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [tempName, setTempName] = useState(flow.name);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,8 +60,14 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
         border: '1.5px solid hsl(var(--border))',
         boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
       }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `hsl(${hue} 70% 60% / 0.5)`; (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px hsl(${hue} 70% 30% / 0.15)`; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'hsl(var(--border))'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)'; }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = `hsl(${hue} 70% 60% / 0.5)`;
+        e.currentTarget.style.boxShadow = `0 8px 24px hsl(${hue} 70% 30% / 0.15)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'hsl(var(--border))';
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+      }}
       onClick={() => !menuOpen && !editing && !confirmDelete && onOpen()}
       data-testid={`card-flow-${flow.id}`}
     >
@@ -76,7 +76,6 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
         className="h-24 relative overflow-hidden flex items-center justify-center"
         style={{ background: `linear-gradient(135deg, hsl(${hue} 60% 15%), hsl(${(hue + 40) % 360} 70% 20%))` }}
       >
-        {/* Node type icon cluster */}
         <div className="flex items-center gap-2 opacity-60">
           {nodeIcons.map((Icon, i) => (
             <div key={i} className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -86,7 +85,6 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
           ))}
         </div>
 
-        {/* Stats overlay */}
         <div className="absolute bottom-2 right-2.5 flex items-center gap-2 text-[10px] font-medium"
           style={{ color: `hsl(${hue} 80% 80%)` }}>
           <span>{flow.nodeCount} nodes</span>
@@ -94,17 +92,15 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
           <span>{flow.edgeCount} edges</span>
         </div>
 
-        {/* Status */}
         <div className="absolute top-2 left-2.5">
           <StatusBadge status={flow.status} />
         </div>
 
-        {/* Menu button */}
         <div className="absolute top-2 right-2.5">
           <button
             onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-            style={{ background: 'rgba(0,0,0,0.3)', color: 'white' }}
+            style={{ background: 'rgba(0,0,0,0.4)', color: 'white' }}
             data-testid={`button-menu-${flow.id}`}
           >
             <MoreHorizontal size={14} />
@@ -140,7 +136,6 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
 
       {/* Body */}
       <div className="px-4 py-3">
-        {/* Name */}
         {editing ? (
           <div className="flex items-center gap-1.5 mb-2" onClick={(e) => e.stopPropagation()}>
             <input
@@ -165,7 +160,6 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
         </div>
       </div>
 
-      {/* Confirm delete overlay */}
       {confirmDelete && (
         <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
           <div className="rounded-lg p-3 space-y-2" style={{ background: 'hsl(var(--destructive) / 0.1)', border: '1px solid hsl(var(--destructive) / 0.3)' }}>
@@ -182,7 +176,7 @@ function FlowCard({ flow, onOpen, onRename, onDuplicate, onDelete }: {
   );
 }
 
-function CreateFlowModal({ onClose, onCreate }: { onClose: () => void; onCreate: (name: string, desc: string) => void }) {
+function CreateFlowModal({ onClose, onCreate }) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
 
@@ -193,8 +187,7 @@ function CreateFlowModal({ onClose, onCreate }: { onClose: () => void; onCreate:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}
-      onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
       <div className="w-96 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
         onClick={(e) => e.stopPropagation()}>
@@ -256,12 +249,11 @@ function CreateFlowModal({ onClose, onCreate }: { onClose: () => void; onCreate:
 
 export default function FlowDashboard() {
   const [, setLocation] = useLocation();
-  const [flows, setFlows] = useState<FlowMeta[]>([]);
+  const [flows, setFlows] = useState([]);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'draft' | 'published'>('all');
+  const [filter, setFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
 
-  // Apply dark mode on dashboard too
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
@@ -269,29 +261,27 @@ export default function FlowDashboard() {
   const reload = () => setFlows(getFlowList());
   useEffect(() => { reload(); }, []);
 
-  // Seed a starter flow on first load
   useEffect(() => {
     if (getFlowList().length === 0) {
-      const demo = createFlow('Welcome Bot', 'A simple greeter flow to get you started');
       const now = Date.now();
+      const demo = createFlow('Welcome Bot', 'A simple greeter flow to get you started');
       saveFlow({
         ...demo,
         nodes: [
-          { id: 'start_1', type: 'startNode', position: { x: 300, y: 50 }, data: { label: 'Start' } },
-          { id: 'text_1', type: 'textMessage', position: { x: 260, y: 160 }, data: { label: 'Welcome Message', message: 'Hello! How can I help you today?' } },
-          { id: 'end_1', type: 'endNode', position: { x: 300, y: 300 }, data: { label: 'End' } },
+          { id: 'n1', type: 'startNode', position: { x: 200, y: 50 }, data: { label: 'Start' } },
+          { id: 'n2', type: 'textMessage', position: { x: 160, y: 180 }, data: { label: 'Greeting', message: 'Hello! How can I help you today?' } },
+          { id: 'n3', type: 'endNode', position: { x: 200, y: 340 }, data: { label: 'End', message: 'Thanks for chatting!' } },
         ],
         edges: [
-          { id: 'e1', source: 'start_1', target: 'text_1' },
-          { id: 'e2', source: 'text_1', target: 'end_1' },
+          { id: 'e1', source: 'n1', target: 'n2' },
+          { id: 'e2', source: 'n2', target: 'n3' },
         ],
         updatedAt: now,
         createdAt: now,
       });
       reload();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     return flows.filter((f) => {
@@ -301,25 +291,25 @@ export default function FlowDashboard() {
     });
   }, [flows, search, filter]);
 
-  const handleCreate = (name: string, desc: string) => {
+  const handleCreate = (name, desc) => {
     const flow = createFlow(name, desc);
     reload();
     setLocation(`/flow/${flow.id}`);
   };
 
-  const handleOpen = (id: string) => setLocation(`/flow/${id}`);
+  const handleOpen = (id) => setLocation(`/flow/${id}`);
 
-  const handleRename = (id: string, name: string) => {
+  const handleRename = (id, name) => {
     renameFlow(id, name);
     reload();
   };
 
-  const handleDuplicate = (id: string) => {
+  const handleDuplicate = (id) => {
     cloneFlow(id);
     reload();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id) => {
     deleteFlow(id);
     reload();
   };
@@ -329,7 +319,6 @@ export default function FlowDashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
       <header className="sticky top-0 z-20 px-6 h-14 flex items-center justify-between"
         style={{ background: 'hsl(var(--card))', borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2.5">
@@ -350,7 +339,6 @@ export default function FlowDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        {/* Hero stats */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-1">My Flows</h1>
           <p className="text-sm text-muted-foreground">
@@ -360,13 +348,12 @@ export default function FlowDashboard() {
           </p>
         </div>
 
-        {/* Stats row */}
         {flows.length > 0 && (
           <div className="grid grid-cols-3 gap-4 mb-8">
             {[
               { label: 'Total Flows', value: flows.length, color: '#6366f1' },
               { label: 'Published', value: totalPublished, color: '#10b981' },
-              { label: 'Draft', value: totalDraft, color: '#64748b' },
+              { label: 'Drafts', value: totalDraft, color: '#64748b' },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl p-4"
                 style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
@@ -377,7 +364,6 @@ export default function FlowDashboard() {
           </div>
         )}
 
-        {/* Search + filter */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -392,7 +378,7 @@ export default function FlowDashboard() {
           </div>
 
           <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
-            {(['all', 'draft', 'published'] as const).map((f) => (
+            {['all', 'draft', 'published'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -409,16 +395,14 @@ export default function FlowDashboard() {
           </div>
         </div>
 
-        {/* Grid */}
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {/* Create new card */}
             <button
               onClick={() => setShowCreate(true)}
               className="rounded-2xl border-2 border-dashed h-48 flex flex-col items-center justify-center gap-3 transition-all"
               style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'hsl(var(--primary))'; (e.currentTarget as HTMLElement).style.color = 'hsl(var(--primary))'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'hsl(var(--border))'; (e.currentTarget as HTMLElement).style.color = 'hsl(var(--muted-foreground))'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--primary))'; e.currentTarget.style.color = 'hsl(var(--primary))'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}
               data-testid="button-create-flow-card"
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center border-2 border-current">
@@ -439,7 +423,6 @@ export default function FlowDashboard() {
             ))}
           </div>
         ) : flows.length === 0 ? (
-          /* Empty state — no flows at all */
           <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
@@ -460,7 +443,6 @@ export default function FlowDashboard() {
             </button>
           </div>
         ) : (
-          /* No search results */
           <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
             <Search size={24} className="text-muted-foreground" />
             <p className="text-sm text-muted-foreground">No flows match "{search}"</p>

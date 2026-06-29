@@ -1,13 +1,10 @@
 import { memo } from 'react';
-import { NodeProps, Handle, Position } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 import { Square } from 'lucide-react';
 
-export const EndNode = memo(function EndNode({ data, selected }: NodeProps) {
+export const EndNode = memo(function EndNode({ data, selected }) {
   return (
-    <div
-      className="flex flex-col items-center cursor-pointer"
-      style={{ animation: 'nodeAppear 0.2s ease-out' }}
-    >
+    <div className="flex flex-col items-center cursor-pointer">
       <Handle
         type="target"
         position={Position.Top}

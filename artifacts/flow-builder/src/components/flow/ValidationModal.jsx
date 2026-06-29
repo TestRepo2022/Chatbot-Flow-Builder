@@ -1,12 +1,6 @@
 import { CheckCircle, XCircle, AlertTriangle, X } from 'lucide-react';
 
-interface Props {
-  result: { valid: boolean; errors: string[] } | null;
-  onClose: () => void;
-  onPublish?: () => void;
-}
-
-export function ValidationModal({ result, onClose, onPublish }: Props) {
+export function ValidationModal({ result, onClose, onPublish }) {
   if (!result) return null;
 
   return (
@@ -15,7 +9,6 @@ export function ValidationModal({ result, onClose, onPublish }: Props) {
         className="w-96 rounded-2xl shadow-2xl overflow-hidden"
         style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
       >
-        {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
           {result.valid ? (
             <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
@@ -27,7 +20,9 @@ export function ValidationModal({ result, onClose, onPublish }: Props) {
               {result.valid ? 'Flow is valid' : 'Validation failed'}
             </div>
             <div className="text-xs text-muted-foreground">
-              {result.valid ? 'Ready to publish' : `${result.errors.length} issue${result.errors.length !== 1 ? 's' : ''} found`}
+              {result.valid
+                ? 'Ready to publish'
+                : `${result.errors.length} issue${result.errors.length !== 1 ? 's' : ''} found`}
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/10 transition-colors">
@@ -35,7 +30,6 @@ export function ValidationModal({ result, onClose, onPublish }: Props) {
           </button>
         </div>
 
-        {/* Body */}
         <div className="px-5 py-4">
           {result.valid ? (
             <div className="text-sm text-green-400 text-center py-4">
@@ -53,7 +47,6 @@ export function ValidationModal({ result, onClose, onPublish }: Props) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-4 flex gap-2 justify-end" style={{ borderTop: '1px solid hsl(var(--border))' }}>
           <button
             onClick={onClose}

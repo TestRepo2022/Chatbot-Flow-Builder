@@ -4,18 +4,6 @@ import { X, Copy } from 'lucide-react';
 import { useFlowStore } from '../../../store/flowStore';
 import { getNodeConfig } from '../../../lib/nodeConfig';
 
-interface BaseNodeProps {
-  id: string;
-  type: string;
-  selected: boolean;
-  children: React.ReactNode;
-  handles?: {
-    inputs?: Array<{ id?: string; position?: Position; style?: React.CSSProperties; label?: string }>;
-    outputs?: Array<{ id?: string; position?: Position; style?: React.CSSProperties; label?: string }>;
-  };
-  hideDefaultHandles?: boolean;
-}
-
 export const BaseNode = memo(function BaseNode({
   id,
   type,
@@ -23,7 +11,7 @@ export const BaseNode = memo(function BaseNode({
   children,
   handles,
   hideDefaultHandles,
-}: BaseNodeProps) {
+}) {
   const { deleteNode, duplicateNode, selectNode } = useFlowStore();
   const [hovered, setHovered] = useState(false);
   const config = getNodeConfig(type);
@@ -63,10 +51,10 @@ export const BaseNode = memo(function BaseNode({
       <div
         className="w-64 rounded-xl overflow-hidden shadow-lg transition-all duration-150"
         style={{
-          background: `hsl(var(--card))`,
+          background: 'hsl(var(--card))',
           border: selected
             ? `2px solid ${config.color}`
-            : `1.5px solid hsl(var(--border))`,
+            : '1.5px solid hsl(var(--border))',
           boxShadow: selected
             ? `0 0 0 1px ${config.color}33, 0 8px 32px ${config.color}22`
             : '0 2px 8px rgba(0,0,0,0.18)',
@@ -136,11 +124,11 @@ export const BaseNode = memo(function BaseNode({
           {h.label && (
             <span
               className="absolute text-[10px] font-medium pointer-events-none"
-              style={{
-                color: config.color,
-                ...(h.position === Position.Right ? { right: -60, top: '50%', transform: 'translateY(-50%)' } :
-                  { bottom: -18, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }),
-              }}
+              style={
+                h.position === Position.Right
+                  ? { right: -60, top: '50%', transform: 'translateY(-50%)' }
+                  : { bottom: -18, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }
+              }
             >
               {h.label}
             </span>

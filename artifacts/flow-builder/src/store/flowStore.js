@@ -1,47 +1,15 @@
 import { create } from 'zustand';
-import {
-  Connection,
-  Edge,
-  EdgeChange,
-  Node,
-  NodeChange,
-  addEdge,
-  OnNodesChange,
-  OnEdgesChange,
-  OnConnect,
-  applyNodeChanges,
-  applyEdgeChanges,
-} from 'reactflow';
+import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { NODE_TYPES_CONFIG } from '../lib/nodeConfig';
-import { saveFlow as apiSaveFlow, getFlow, publishFlow as apiPublishFlow, FlowData } from '../lib/api';
-
-export type { FlowData as FlowJSON };
-
-export interface HistoryEntry {
-  nodes: Node[];
-  edges: Edge[];
-  timestamp: number;
-}
-
-export interface VersionSnapshot {
-  id: string;
-  timestamp: number;
-  label: string;
-  nodeCount: number;
-  edgeCount: number;
-  nodes: Node[];
-  edges: Edge[];
-  flowName: string;
-  trigger: 'auto' | 'manual' | 'publish';
-}
+import { saveFlow as apiSaveFlow, getFlow, publishFlow as apiPublishFlow } from '../lib/api';
 
 const MAX_SNAPSHOTS = 10;
 
-function snapshotsKey(flowId: string) {
+function snapshotsKey(flowId) {
   return `fb_flow_${flowId}_history`;
 }
 
-function loadSnapshots(flowId: string): VersionSnapshot[] {
+function loadSnapshots(flowId) {
   try {
     const raw = localStorage.getItem(snapshotsKey(flowId));
     return raw ? JSON.parse(raw) : [];
@@ -50,66 +18,14 @@ function loadSnapshots(flowId: string): VersionSnapshot[] {
   }
 }
 
-function persistSnapshots(flowId: string, snapshots: VersionSnapshot[]) {
+function persistSnapshots(flowId, snapshots) {
   localStorage.setItem(snapshotsKey(flowId), JSON.stringify(snapshots));
 }
 
-const EMPTY_NODES: Node[] = [];
-const EMPTY_EDGES: Edge[] = [];
+const EMPTY_NODES = [];
+const EMPTY_EDGES = [];
 
-export interface FlowStore {
-  flowId: string;
-  flowName: string;
-  flowStatus: 'draft' | 'published';
-  flowDescription: string;
-  lastSaved: Date | null;
-  isLoaded: boolean;
-
-  nodes: Node[];
-  edges: Edge[];
-  selectedNodeId: string | null;
-  copiedNode: Node | null;
-
-  history: HistoryEntry[];
-  historyIndex: number;
-  canUndo: boolean;
-  canRedo: boolean;
-
-  versionSnapshots: VersionSnapshot[];
-
-  setNodes: (nodes: Node[]) => void;
-  setEdges: (edges: Edge[]) => void;
-  onNodesChange: OnNodesChange;
-  onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
-  selectNode: (id: string | null) => void;
-  updateNodeData: (id: string, data: Partial<any>) => void;
-  deleteNode: (id: string) => void;
-  deleteEdge: (id: string) => void;
-  duplicateNode: (id: string) => void;
-  copyNode: (id: string) => void;
-  pasteNode: () => void;
-  addNode: (type: string, position: { x: number; y: number }) => void;
-
-  pushHistory: () => void;
-  undo: () => void;
-  redo: () => void;
-
-  saveSnapshot: (trigger?: 'auto' | 'manual' | 'publish', label?: string) => void;
-  restoreSnapshot: (snapshotId: string) => void;
-  deleteSnapshot: (snapshotId: string) => void;
-
-  loadFlow: (id: string) => void;
-  setFlowName: (name: string) => void;
-  publishFlow: () => void;
-  saveAsDraft: () => void;
-  saveFlow: () => void;
-  exportJSON: () => FlowData;
-  importJSON: (json: FlowData) => void;
-  validateFlow: () => { valid: boolean; errors: string[] };
-}
-
-export const useFlowStore = create<FlowStore>((set, get) => ({
+export const useFlowStore = create((set, get) => ({
   flowId: '',
   flowName: '',
   flowStatus: 'draft',
@@ -132,15 +48,15 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
 
-  onNodesChange: (changes: NodeChange[]) => {
+  onNodesChange: (changes) => {
     set({ nodes: applyNodeChanges(changes, get().nodes) });
   },
 
-  onEdgesChange: (changes: EdgeChange[]) => {
+  onEdgesChange: (changes) => {
     set({ edges: applyEdgeChanges(changes, get().edges) });
   },
 
-  onConnect: (connection: Connection) => {
+  onConnect: (connection) => {
     const newEdge = { ...connection, id: `e_${Date.now()}` };
     const edges = addEdge(newEdge, get().edges);
     set({ edges });
@@ -174,7 +90,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   duplicateNode: (id) => {
     const node = get().nodes.find((n) => n.id === id);
     if (node) {
-      const newNode: Node = {
+      const newNode = {
         ...node,
         id: `node_${Date.now()}`,
         position: { x: node.position.x + 60, y: node.position.y + 60 },
@@ -193,7 +109,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   pasteNode: () => {
     const { copiedNode } = get();
     if (copiedNode) {
-      const newNode: Node = {
+      const newNode = {
         ...copiedNode,
         id: `node_${Date.now()}`,
         position: { x: copiedNode.position.x + 80, y: copiedNode.position.y + 80 },
@@ -206,7 +122,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
 
   addNode: (type, position) => {
     const config = NODE_TYPES_CONFIG.find((n) => n.type === type);
-    const newNode: Node = {
+    const newNode = {
       id: `node_${Date.now()}`,
       type,
       position,
@@ -259,16 +175,12 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     }
   },
 
-  saveSnapshot: (trigger = 'auto', label?: string) => {
+  saveSnapshot: (trigger = 'auto', label) => {
     const { nodes, edges, flowName, versionSnapshots, flowId } = get();
     if (!flowId) return;
     const now = Date.now();
-    const triggerLabels: Record<string, string> = {
-      auto: 'Auto-save',
-      manual: 'Manual save',
-      publish: 'Published',
-    };
-    const newSnap: VersionSnapshot = {
+    const triggerLabels = { auto: 'Auto-save', manual: 'Manual save', publish: 'Published' };
+    const newSnap = {
       id: `snap_${now}`,
       timestamp: now,
       label: label || `${triggerLabels[trigger] || 'Save'} — ${new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
@@ -307,11 +219,11 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     set({ versionSnapshots: updated });
   },
 
-  loadFlow: (id: string) => {
+  loadFlow: (id) => {
     const flow = getFlow(id);
     if (!flow) return;
-    const nodes = (flow.nodes || []) as Node[];
-    const edges = (flow.edges || []) as Edge[];
+    const nodes = flow.nodes || [];
+    const edges = flow.edges || [];
     set({
       flowId: flow.id,
       flowName: flow.name,
@@ -406,7 +318,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
 
   validateFlow: () => {
     const { nodes, edges } = get();
-    const errors: string[] = [];
+    const errors = [];
 
     const startNodes = nodes.filter((n) => n.type === 'startNode');
     if (startNodes.length === 0) errors.push('Flow must have a Start node');
@@ -417,7 +329,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
       if (!startConnected) errors.push('Start node has no outgoing connections');
     }
 
-    const connectedNodeIds = new Set<string>();
+    const connectedNodeIds = new Set();
     edges.forEach((e) => {
       connectedNodeIds.add(e.source);
       connectedNodeIds.add(e.target);

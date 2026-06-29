@@ -1,17 +1,17 @@
 import { memo, useState } from 'react';
-import { NodeProps, Handle, Position } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 import { getNodeConfig } from '../../../lib/nodeConfig';
 import { useFlowStore } from '../../../store/flowStore';
 import { X, Copy, CheckCircle, XCircle } from 'lucide-react';
 
-export const ConditionNode = memo(function ConditionNode({ id, type, selected, data }: NodeProps) {
+export const ConditionNode = memo(function ConditionNode({ id, type, selected, data }) {
   const { deleteNode, duplicateNode, selectNode } = useFlowStore();
   const [hovered, setHovered] = useState(false);
   const config = getNodeConfig(type);
   if (!config) return null;
   const Icon = config.icon;
 
-  const operatorLabels: Record<string, string> = {
+  const operatorLabels = {
     equals: '==',
     not_equals: '!=',
     contains: 'contains',
@@ -25,7 +25,6 @@ export const ConditionNode = memo(function ConditionNode({ id, type, selected, d
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => selectNode(id)}
-      style={{ animation: 'nodeAppear 0.2s ease-out' }}
     >
       <Handle type="target" position={Position.Top} style={{ background: config.color, borderColor: config.color }} />
 
@@ -33,7 +32,7 @@ export const ConditionNode = memo(function ConditionNode({ id, type, selected, d
         className="w-64 rounded-xl overflow-hidden shadow-lg"
         style={{
           background: 'hsl(var(--card))',
-          border: selected ? `2px solid ${config.color}` : `1.5px solid hsl(var(--border))`,
+          border: selected ? `2px solid ${config.color}` : '1.5px solid hsl(var(--border))',
           boxShadow: selected ? `0 0 0 1px ${config.color}33` : '0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
@@ -43,8 +42,12 @@ export const ConditionNode = memo(function ConditionNode({ id, type, selected, d
           </div>
           <span className="text-xs font-semibold text-foreground tracking-wide flex-1">CONDITION</span>
           <div className="flex items-center gap-1 transition-opacity" style={{ opacity: hovered || selected ? 1 : 0 }}>
-            <button onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 text-muted-foreground hover:text-foreground"><Copy size={11} /></button>
-            <button onClick={(e) => { e.stopPropagation(); deleteNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20 text-muted-foreground hover:text-red-400"><X size={11} /></button>
+            <button onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 text-muted-foreground hover:text-foreground">
+              <Copy size={11} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); deleteNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20 text-muted-foreground hover:text-red-400">
+              <X size={11} />
+            </button>
           </div>
         </div>
 
@@ -69,7 +72,6 @@ export const ConditionNode = memo(function ConditionNode({ id, type, selected, d
             )}
           </div>
 
-          {/* True / False branches */}
           <div className="grid grid-cols-2 gap-2 mt-1 relative">
             <div className="relative">
               <div className="flex items-center gap-1 text-xs py-1.5 px-2 rounded-lg border justify-center" style={{ borderColor: '#10b98166', color: '#10b981', background: '#10b98111' }}>

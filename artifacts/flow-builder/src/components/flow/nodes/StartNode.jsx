@@ -1,13 +1,10 @@
 import { memo } from 'react';
-import { NodeProps, Handle, Position } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 import { Play } from 'lucide-react';
 
-export const StartNode = memo(function StartNode({ id, selected }: NodeProps) {
+export const StartNode = memo(function StartNode({ selected }) {
   return (
-    <div
-      className="flex flex-col items-center cursor-pointer"
-      style={{ animation: 'nodeAppear 0.2s ease-out' }}
-    >
+    <div className="flex flex-col items-center cursor-pointer">
       <div
         className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all"
         style={{

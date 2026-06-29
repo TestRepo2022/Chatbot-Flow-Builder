@@ -1,11 +1,10 @@
-import { memo } from 'react';
-import { NodeProps, Handle, Position } from 'reactflow';
+import { memo, useState } from 'react';
+import { Handle, Position } from 'reactflow';
 import { getNodeConfig } from '../../../lib/nodeConfig';
 import { useFlowStore } from '../../../store/flowStore';
 import { X, Copy } from 'lucide-react';
-import { useState } from 'react';
 
-export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected, data }: NodeProps) {
+export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected, data }) {
   const { deleteNode, duplicateNode, selectNode } = useFlowStore();
   const [hovered, setHovered] = useState(false);
   const config = getNodeConfig(type);
@@ -19,7 +18,6 @@ export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected,
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => selectNode(id)}
-      style={{ animation: 'nodeAppear 0.2s ease-out' }}
     >
       <Handle type="target" position={Position.Top} style={{ background: config.color, borderColor: config.color }} />
 
@@ -27,7 +25,7 @@ export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected,
         className="w-64 rounded-xl overflow-hidden shadow-lg"
         style={{
           background: 'hsl(var(--card))',
-          border: selected ? `2px solid ${config.color}` : `1.5px solid hsl(var(--border))`,
+          border: selected ? `2px solid ${config.color}` : '1.5px solid hsl(var(--border))',
           boxShadow: selected ? `0 0 0 1px ${config.color}33, 0 8px 32px ${config.color}22` : '0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
@@ -37,8 +35,12 @@ export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected,
           </div>
           <span className="text-xs font-semibold text-foreground tracking-wide flex-1 truncate">QUICK REPLY</span>
           <div className="flex items-center gap-1 transition-opacity" style={{ opacity: hovered || selected ? 1 : 0 }}>
-            <button onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 text-muted-foreground hover:text-foreground"><Copy size={11} /></button>
-            <button onClick={(e) => { e.stopPropagation(); deleteNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20 text-muted-foreground hover:text-red-400"><X size={11} /></button>
+            <button onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 text-muted-foreground hover:text-foreground">
+              <Copy size={11} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); deleteNode(id); }} className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20 text-muted-foreground hover:text-red-400">
+              <X size={11} />
+            </button>
           </div>
         </div>
 
@@ -51,7 +53,7 @@ export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected,
           )}
 
           <div className="space-y-1 relative">
-            {buttons.map((btn: { id: string; text: string }, i: number) => (
+            {buttons.map((btn, i) => (
               <div key={btn.id} className="relative">
                 <div
                   className="text-xs font-medium text-center py-1.5 px-3 rounded-lg border transition-colors"
@@ -69,8 +71,8 @@ export const QuickReplyNode = memo(function QuickReplyNode({ id, type, selected,
                     right: -8,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: 8,
-                    height: 8,
+                    width: 10,
+                    height: 10,
                   }}
                 />
               </div>
